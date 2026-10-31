@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Biozatix Slide Viewer</title>
+    <script>
+        // Apply the saved theme before the app loads, so dark mode does not flash white.
+        try {
+            var theme = localStorage.getItem('ui-theme') || 'system';
+            if (theme === 'system') theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.dataset.bsTheme = theme;
+        } catch (error) {
+            // Storage blocked: the app applies the theme once it starts.
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

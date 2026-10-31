@@ -1,0 +1,1375 @@
+/* Slide viewer, annotation tools and split view */
+
+.viewer-screen {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+.viewer-screen:fullscreen {
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ------------------------------------------------------------------
+   Viewer top bar
+   ------------------------------------------------------------------ */
+.viewer-topbar {
+    display: flex;
+    min-height: 52px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 6px 12px;
+    background: var(--ui-surface);
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.vt-title {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.vt-title h1 {
+    margin: 0;
+    overflow: hidden;
+    color: var(--ui-text);
+    font-size: 1rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vt-title span {
+    color: var(--ui-text-muted);
+    font-size: 0.78rem;
+}
+
+.vt-group {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 2px;
+}
+
+.vt-btn {
+    display: inline-flex;
+    height: 34px;
+    min-width: 34px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 10px;
+    color: var(--ui-text);
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.vt-btn:hover {
+    color: var(--ui-text);
+    background: var(--ui-surface-muted);
+}
+
+.vt-btn:focus-visible {
+    border-color: var(--ui-accent);
+    outline: none;
+}
+
+.vt-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.vt-btn.active {
+    color: var(--ui-accent);
+    background: var(--ui-accent-soft);
+}
+
+.vt-back {
+    border-color: var(--ui-border);
+}
+
+.vt-divider {
+    width: 1px;
+    height: 22px;
+    margin: 0 6px;
+    background: var(--ui-border);
+}
+
+.layout-icon {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* ------------------------------------------------------------------
+   Stage
+   ------------------------------------------------------------------ */
+.viewer-stage {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+/* The slide area; the annotation list (when open) sits beside it and narrows it. */
+.viewer-main {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.osd-container {
+    position: absolute;
+    inset: 0;
+    background: var(--stage-bg);
+}
+
+.viewer-stage.is-drawing .openseadragon-canvas {
+    cursor: crosshair !important;
+}
+
+.viewer-stage.is-text-tool .openseadragon-canvas {
+    cursor: text !important;
+}
+
+/* OpenSeadragon minimap */
+.viewer-stage .navigator {
+    margin: 12px !important;
+    background: var(--ui-surface) !important;
+    border: 2px solid var(--ui-surface) !important;
+    border-radius: 8px;
+    box-shadow: var(--ui-shadow);
+}
+
+.viewer-stage .navigator .displayregion {
+    border: 2px solid var(--ui-accent) !important;
+    background: rgba(37, 99, 235, 0.12);
+}
+
+/* Floating panels share one look */
+.tool-palette,
+.mag-bar,
+.scale-bar,
+.cursor-info,
+.annotation-count {
+    position: absolute;
+    z-index: 20;
+    background: var(--panel-float);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+
+/* Annotation tools */
+.tool-palette {
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px;
+}
+
+.tool-sep {
+    width: 22px;
+    height: 1px;
+    margin: 4px 0;
+    background: var(--ui-border);
+}
+
+.tool-btn {
+    position: relative;
+    display: flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--tool-color);
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.tool-btn:hover {
+    background: var(--ui-surface-muted);
+}
+
+.tool-btn:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 1px;
+}
+
+.tool-btn.active {
+    color: var(--ui-accent);
+    background: var(--ui-accent-soft);
+}
+
+.tool-btn:disabled {
+    opacity: 0.5;
+    cursor: progress;
+}
+
+/* Tooltip to the right of each tool */
+.tool-btn[data-tip]::after {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 10px);
+    padding: 5px 9px;
+    color: #fff;
+    background: rgba(17, 24, 39, 0.92);
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    content: attr(data-tip);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-4px, -50%);
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+.tool-btn[data-tip]:hover::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+}
+
+.color-control {
+    position: relative;
+}
+
+.color-dot {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.color-popover {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 12px);
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    background: var(--ui-surface);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+
+.swatch-custom {
+    margin: 0;
+    color: var(--ui-text-muted);
+    font-size: 11px;
+}
+
+.swatch-custom input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.dirty-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: none;
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+.tool-btn.is-dirty .dirty-dot {
+    display: block;
+}
+
+/* Magnification presets */
+.mag-bar {
+    bottom: 14px;
+    left: 50%;
+    display: flex;
+    max-width: calc(100% - 24px);
+    align-items: center;
+    gap: 6px;
+    padding: 5px;
+    transform: translateX(-50%);
+}
+
+.mag-current {
+    min-width: 56px;
+    padding: 0 6px;
+    color: var(--ui-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+/* Magnification slider (log scale) with the presets as labels under the track */
+.mag-slider {
+    width: 320px;
+    padding: 2px 12px 0;
+}
+
+.mag-slider-track {
+    position: relative;
+    height: 18px;
+    cursor: pointer;
+    outline: none;
+    touch-action: none;
+}
+
+.mag-slider-rail,
+.mag-slider-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 2px;
+}
+
+.mag-slider-rail {
+    right: 0;
+    background: var(--ui-surface-muted);
+}
+
+.mag-slider-fill {
+    background: var(--ui-accent);
+}
+
+.mag-slider-tick {
+    position: absolute;
+    top: 50%;
+    width: 2px;
+    height: 8px;
+    margin: -4px 0 0 -1px;
+    background: var(--ui-border);
+    border-radius: 1px;
+}
+
+.mag-slider-thumb {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    background: #fff;
+    border: 2px solid var(--ui-accent);
+    border-radius: 50%;
+    transition: box-shadow 0.15s;
+}
+
+.mag-slider-track:hover .mag-slider-thumb,
+.mag-slider-track:focus-visible .mag-slider-thumb {
+    box-shadow: 0 0 0 4px var(--ui-accent-soft);
+}
+
+.mag-slider-labels {
+    position: relative;
+    height: 15px;
+}
+
+.mag-slider-label {
+    position: absolute;
+    top: 0;
+    padding: 0 3px;
+    color: var(--tool-color);
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 15px;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateX(-50%);
+}
+
+.mag-slider-label:hover,
+.mag-slider-label.active {
+    color: var(--ui-accent);
+}
+
+@media (max-width: 768px) {
+    .mag-slider {
+        width: 190px;
+    }
+}
+
+.mag-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--ui-border);
+}
+
+.mag-presets {
+    display: flex;
+    gap: 2px;
+}
+
+.mag-btn {
+    height: 30px;
+    min-width: 38px;
+    padding: 0 8px;
+    color: var(--tool-color);
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.mag-btn:hover {
+    background: var(--ui-surface-muted);
+}
+
+.mag-btn.active {
+    color: #fff;
+    background: var(--ui-accent);
+}
+
+/* Scale bar */
+.scale-bar {
+    bottom: 14px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 6px 10px 8px;
+}
+
+.scale-bar-label {
+    color: var(--ui-text);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.scale-bar-line {
+    display: block;
+    height: 6px;
+    border: 2px solid var(--ui-text);
+    border-top: 0;
+    transition: width 0.1s;
+}
+
+/* Cursor position */
+.cursor-info {
+    right: 12px;
+    bottom: 14px;
+    padding: 6px 10px;
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.cursor-info:empty {
+    display: none;
+}
+
+.annotation-count {
+    top: 12px;
+    left: 50%;
+    padding: 4px 10px;
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+    transform: translateX(-50%);
+}
+
+/* Annotation layer */
+.annotation-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.annotation-layer .ann {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+}
+
+.annotation-layer .ann.draft {
+    stroke-dasharray: 6 4;
+}
+
+.annotation-layer .ann-text {
+    font: 600 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    paint-order: stroke;
+    stroke: rgba(255, 255, 255, 0.95);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+/* Ruler: plain line (no shadow) with its length on a solid label above the middle.
+   The font must match LABEL_FONT in annotations.js, which sizes the label. */
+.annotation-layer .ann-ruler.draft {
+    stroke-dasharray: 6 4;
+}
+
+.annotation-layer .ann-measure {
+    font: 700 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.annotation-layer .ann-measure-bg.selected {
+    stroke: #fff;
+    stroke-width: 1.5;
+}
+
+/* Rulers along the top and left edge (drawn by edgeRulers.js; the size must match
+   EDGE_RULER_SIZE there). Clicks pass through to the slide. */
+.edge-ruler,
+.edge-ruler-corner {
+    position: absolute;
+    z-index: 15;
+    color: #111827;
+    background: #ffffff;
+    pointer-events: none;
+    --edge-ruler-tick: #111827;
+    --edge-ruler-border: #9ca3af;
+}
+
+:root[data-theme='dark'] .edge-ruler,
+:root[data-theme='dark'] .edge-ruler-corner {
+    color: #e5e7eb;
+    background: #161b26;
+    --edge-ruler-tick: #e5e7eb;
+    --edge-ruler-border: #4b5563;
+}
+
+/* A canvas does not stretch between left/right like a div: without an explicit CSS size it
+   takes its drawing-buffer size, which edgeRulers.js sets from the displayed size. */
+.edge-ruler {
+    display: block;
+    box-sizing: border-box;
+}
+
+.edge-ruler-top {
+    top: 0;
+    left: 22px;
+    width: calc(100% - 22px);
+    height: 22px;
+    border-bottom: 1px solid var(--edge-ruler-border);
+}
+
+.edge-ruler-left {
+    top: 22px;
+    left: 0;
+    width: 22px;
+    height: calc(100% - 22px);
+    border-right: 1px solid var(--edge-ruler-border);
+}
+
+.edge-ruler-corner {
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    border-right: 1px solid var(--edge-ruler-border);
+    border-bottom: 1px solid var(--edge-ruler-border);
+}
+
+/* Keep the floating controls clear of the rulers. */
+.viewer-stage.has-edge-rulers .tool-palette {
+    top: 34px;
+    left: 34px;
+}
+
+.viewer-stage.has-edge-rulers .ann-toggle {
+    top: 34px;
+    left: 94px;
+}
+
+.viewer-stage.has-edge-rulers .navigator {
+    margin: 34px 12px 12px 12px !important;
+}
+
+.viewer-stage.has-edge-rulers .scale-bar {
+    left: 34px;
+}
+
+.text-annotation-input {
+    position: absolute;
+    z-index: 30;
+    width: 240px;
+    padding: 6px 10px;
+    color: var(--ui-text);
+    background: var(--surface);
+    border: 2px solid var(--ui-accent);
+    border-radius: 8px;
+    box-shadow: var(--ui-shadow);
+    font-size: 0.9rem;
+    outline: none;
+    transform: translateY(-50%);
+}
+
+/* Loading and error states */
+.viewer-loading,
+.viewer-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+    transform: translate(-50%, -50%);
+}
+
+.viewer-error i {
+    color: var(--ui-danger);
+}
+
+/* Compact viewer (split view panels) */
+.viewer-stage.is-compact .mag-bar {
+    bottom: 8px;
+    padding: 3px;
+}
+
+.viewer-stage.is-compact .mag-current {
+    min-width: 44px;
+    font-size: 0.85rem;
+}
+
+.viewer-stage.is-compact .mag-btn {
+    height: 26px;
+    min-width: 32px;
+    padding: 0 5px;
+    font-size: 0.75rem;
+}
+
+.viewer-stage.is-compact .scale-bar {
+    bottom: 48px;
+    left: 8px;
+    padding: 4px 8px 6px;
+}
+
+.viewer-stage.is-compact .cursor-info {
+    display: none;
+}
+
+.viewer-stage.is-compact .navigator {
+    margin: 8px !important;
+}
+
+/* ------------------------------------------------------------------
+   Split view
+   ------------------------------------------------------------------ */
+.compare-grid {
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: 4px;
+    padding: 4px;
+    background: #111418;
+}
+
+.compare-grid.layout-1 { grid-template-columns: 1fr; }
+.compare-grid.layout-2 { grid-template-columns: 1fr 1fr; }
+.compare-grid.layout-3 { grid-template-columns: repeat(3, 1fr); }
+.compare-grid.layout-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+.compare-panel {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--stage-bg);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: border-color 0.15s;
+}
+
+.compare-panel.is-active {
+    border-color: var(--ui-accent);
+}
+
+.compare-panel-header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: var(--ui-surface);
+}
+
+.compare-panel-index {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #6b7280;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.compare-panel.is-active .compare-panel-index {
+    background: var(--ui-accent);
+}
+
+/* Panel header: the panel's slide (thumbnail + name); opens the slide picker */
+.compare-pick {
+    display: flex;
+    min-width: 0;
+    height: 30px;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 0 3px;
+    color: var(--ui-text);
+    text-align: left;
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: 7px;
+    font-size: 0.8125rem;
+}
+
+.compare-pick:hover {
+    border-color: var(--ui-accent);
+}
+
+.compare-pick-thumb {
+    display: flex;
+    width: 34px;
+    height: 24px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--ui-text-muted);
+    background: var(--ui-surface-muted);
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+.compare-pick-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.compare-pick-thumb .slide-thumbnail-placeholder {
+    font-size: 0.75rem;
+}
+
+.compare-pick-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.compare-pick-name.is-placeholder {
+    padding-left: 6px;
+    color: var(--ui-text-muted);
+    font-weight: 500;
+}
+
+.compare-pick-caret {
+    flex: 0 0 auto;
+    color: var(--ui-text-muted);
+    font-size: 0.7rem;
+}
+
+.compare-panel-case {
+    color: var(--ui-text-muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.compare-panel-body {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.compare-empty {
+    position: absolute;
+    inset: 0;
+    z-index: 26;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--icon-muted);
+    pointer-events: none;
+}
+
+.compare-empty > i {
+    font-size: 2rem;
+}
+
+/* The overlay lets drags through to the (empty) viewer; only its button takes clicks. */
+.compare-empty .btn {
+    margin-top: 4px;
+    pointer-events: auto;
+}
+
+/* ------------------------------------------------------------------
+   Slide picker (compare panels): thumbnails grouped by case
+   ------------------------------------------------------------------ */
+.slide-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(9, 12, 20, 0.6);
+}
+
+.slide-picker {
+    display: flex;
+    width: min(1100px, 100%);
+    height: min(760px, 100%);
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    border-radius: 12px;
+    box-shadow: var(--ui-shadow);
+}
+
+.slide-picker-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.slide-picker-header h2 {
+    margin: 0 auto 0 0;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+.slide-picker-search {
+    position: relative;
+    width: min(320px, 100%);
+}
+
+.slide-picker-search i {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    color: var(--ui-text-muted);
+    font-size: 0.8rem;
+    transform: translateY(-50%);
+}
+
+.slide-picker-search input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px 0 30px;
+    color: var(--ui-text);
+    background: var(--ui-surface-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    outline: none;
+}
+
+.slide-picker-search input:focus {
+    border-color: var(--ui-accent);
+    box-shadow: 0 0 0 3px var(--ui-accent-soft);
+}
+
+.slide-picker-close {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-text-muted);
+    background: none;
+    border: 0;
+    border-radius: 8px;
+}
+
+.slide-picker-close:hover {
+    color: var(--ui-text);
+    background: var(--ui-surface-muted);
+}
+
+.slide-picker-body {
+    flex: 1 1 auto;
+    padding: 4px 16px 20px;
+    overflow-y: auto;
+}
+
+.slide-picker-empty {
+    margin: 48px 0;
+    color: var(--ui-text-muted);
+    text-align: center;
+}
+
+.slide-picker-group h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 14px 0 8px;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    font-size: 0.8125rem;
+    font-weight: 650;
+}
+
+.slide-picker-count {
+    margin-left: 4px;
+    color: var(--ui-text-muted);
+    font-weight: 500;
+}
+
+.slide-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.slide-picker-item {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 6px 8px;
+    color: var(--ui-text);
+    text-align: left;
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.slide-picker-item:hover {
+    border-color: var(--ui-accent);
+}
+
+.slide-picker-item.is-selected {
+    background: var(--ui-accent-soft);
+    border-color: var(--ui-accent);
+    box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
+.slide-picker-thumb {
+    display: flex;
+    height: 100px;
+    margin-bottom: 4px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--ui-text-muted);
+    background: var(--ui-surface-muted);
+    border-radius: 6px;
+}
+
+.slide-picker-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.slide-picker-name {
+    overflow: hidden;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.slide-picker-meta {
+    color: var(--ui-text-muted);
+    font-size: 0.7rem;
+}
+
+.slide-picker-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 1px 7px;
+    color: #fff;
+    background: var(--ui-accent);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.slide-picker-badge.is-muted {
+    background: #6b7280;
+}
+
+@media (max-width: 768px) {
+    .slide-picker-backdrop {
+        padding: 0;
+    }
+
+    .slide-picker {
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .slide-picker-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+/* ------------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------------ */
+@media (max-width: 992px) {
+    .compare-grid.layout-3 {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .vt-back span,
+    .vt-hide-sm,
+    .cursor-info {
+        display: none;
+    }
+
+    .mag-bar {
+        right: 12px;
+        left: auto;
+        bottom: 60px;
+        transform: none;
+    }
+
+    .mag-presets .mag-btn {
+        min-width: 32px;
+        padding: 0 5px;
+    }
+
+    .compare-grid.layout-2,
+    .compare-grid.layout-4 {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-auto-rows: minmax(260px, 1fr);
+        overflow-y: auto;
+    }
+}
+
+.vt-share {
+    color: var(--accent);
+    border-color: var(--accent-border);
+}
+
+.vt-share:hover {
+    color: var(--accent-hover);
+    background: var(--accent-soft);
+}
+
+/* ------------------------------------------------------------------
+   Annotation list
+   ------------------------------------------------------------------ */
+.annotation-layer .ann.selected {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 1)) drop-shadow(0 0 6px rgba(29, 78, 216, 0.6));
+}
+
+.annotation-layer .ann-text.selected {
+    font-size: 16px;
+    text-decoration: underline;
+}
+
+.ann-toggle {
+    position: absolute;
+    top: 12px;
+    left: 72px;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    color: var(--ui-text);
+    background: var(--panel-float);
+    border: 0;
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.ann-toggle:hover {
+    background: var(--surface);
+}
+
+.ann-toggle-count {
+    padding: 0 7px;
+    color: var(--ui-accent);
+    background: var(--ui-accent-soft);
+    border-radius: 999px;
+    font-size: 0.75rem;
+}
+
+.ann-panel {
+    display: flex;
+    width: 320px;
+    flex: 0 0 auto;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+    border-left: 1px solid var(--ui-border);
+}
+
+.ann-panel-header,
+.ann-panel-footer {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 8px 8px 14px;
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.ann-panel-footer {
+    padding: 8px 10px 8px 14px;
+    border-top: 1px solid var(--ui-border);
+    border-bottom: 0;
+}
+
+.ann-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.ann-save-state {
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+}
+
+.ann-save-state.is-dirty {
+    color: #b54708;
+    font-weight: 600;
+}
+
+.ann-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.ann-empty {
+    margin: 16px 10px;
+    color: var(--ui-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.ann-item {
+    border-radius: 8px;
+}
+
+.ann-item + .ann-item {
+    margin-top: 2px;
+}
+
+.ann-item.selected {
+    background: var(--ui-accent-soft);
+}
+
+.ann-item-main {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px;
+    color: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+}
+
+.ann-item:not(.selected) .ann-item-main:hover {
+    background: var(--ui-surface-muted);
+}
+
+.ann-item-icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1.5px solid;
+    border-radius: 7px;
+    font-size: 0.75rem;
+}
+
+.ann-item-text {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ann-item-title {
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ann-item-measure {
+    color: var(--ui-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ann-item-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ui-text-muted);
+    font-size: 0.75rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.ann-item-desc-full {
+    margin: 0 10px 10px 46px;
+    color: var(--ui-text);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.ann-item-meta {
+    color: var(--icon-muted);
+    font-size: 0.6875rem;
+}
+
+.ann-guest {
+    margin-left: 4px;
+    padding: 0 5px;
+    color: #b54708;
+    background: #fffaeb;
+    border-radius: 4px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ann-item-go {
+    margin-top: 6px;
+    color: var(--icon-muted);
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.ann-item-main:hover .ann-item-go,
+.ann-item.selected .ann-item-go {
+    opacity: 1;
+}
+
+.ann-item.selected .ann-item-go {
+    color: var(--ui-accent);
+}
+
+.ann-item-edit {
+    padding: 0 10px 10px 46px;
+}
+
+.ann-item-edit .form-label {
+    margin-bottom: 2px;
+    font-size: 0.6875rem;
+}
+
+.ann-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    /* On phones the list goes below the slide instead of beside it. */
+    .viewer-stage.has-ann-panel {
+        flex-direction: column;
+    }
+
+    .ann-panel {
+        width: auto;
+        height: 45%;
+        border-top: 1px solid var(--ui-border);
+        border-left: 0;
+    }
+}
+
+:root[data-theme='dark'] .viewer-stage .navigator {
+    background: var(--surface) !important;
+    border-color: var(--surface) !important;
+}
+
+:root[data-theme='dark'] .compare-grid {
+    background: #05070b;
+}
+
+:root[data-theme='dark'] .ann-guest {
+    color: #fec84b;
+    background: rgba(247, 144, 9, 0.16);
+}
+
+:root[data-theme='dark'] .ann-save-state.is-dirty {
+    color: #fec84b;
+}

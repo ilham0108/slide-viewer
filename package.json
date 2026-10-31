@@ -1,0 +1,41 @@
+{
+  "name": "slide_viewers",
+  "version": "1.0.0",
+  "description": "Biozatix whole-slide image viewer",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "concurrently -k -n server,client,tiles -c blue,magenta,green \"nodemon index.js\" \"vite\" \"node scripts/tile-service.js\"",
+    "dev:server": "nodemon index.js",
+    "dev:client": "vite",
+    "dev:tiles": "node scripts/tile-service.js",
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:tiles": "node scripts/tile-service.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fortawesome/fontawesome-free": "6.7.2",
+    "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.8",
+    "dotenv": "^18.0.8",
+    "express": "^5.1.0",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.19.0",
+    "multer": "^2.0.2",
+    "mysql2": "^3.24.6",
+    "openseadragon": "^6.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.6",
+    "nodemon": "^3.1.10",
+    "vite": "^8.3.5"
+  }
+}

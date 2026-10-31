@@ -1,0 +1,12 @@
+node_modules/
+.env
+npm-debug.log*
+
+logs/
+client/dist/
+_backup_pre_react/
+
+# Tile service
+tile-service/.venv/
+__pycache__/
+storage/
