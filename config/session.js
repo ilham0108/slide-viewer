@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const pool = require('../database/pool');
+const CachedSessionStore = require('../utils/cachedSessionStore');
 const logger = require('../utils/logger');
 
 const log = logger.child('server');
@@ -15,7 +16,9 @@ if (!secret) {
 }
 
 // Sessions live in MySQL (table "sessions", created automatically) so they survive restarts.
-const store = new MySQLStore({ clearExpired: true, checkExpirationInterval: 15 * 60 * 1000 }, pool);
+// The cache in front keeps tile requests from querying MySQL for the session every time.
+const mysqlStore = new MySQLStore({ clearExpired: true, checkExpirationInterval: 15 * 60 * 1000 }, pool);
+const store = new CachedSessionStore(mysqlStore);
 
 const sessionMiddleware = session({
     name: 'sv.sid',

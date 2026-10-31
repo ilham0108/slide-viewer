@@ -8,6 +8,11 @@ const SLIDE_DIR = path.join(PUBLIC_DIR, 'slides');
 const BRANDING_DIR = path.join(PUBLIC_DIR, 'branding');
 const LEGACY_DZI_DIR = SLIDE_DIR;
 const LOG_DIR = process.env.LOG_DIR ? path.resolve(ROOT_DIR, process.env.LOG_DIR) : path.join(ROOT_DIR, 'logs');
+// Tiles rendered by the tile service. It writes and trims them; Express reads them directly.
+// Must resolve like TILE_CACHE_DIR in tile-service/app.py.
+const TILE_CACHE_DIR = process.env.TILE_CACHE_DIR
+    ? path.resolve(ROOT_DIR, process.env.TILE_CACHE_DIR)
+    : path.join(ROOT_DIR, 'storage', 'tile-cache');
 const CLIENT_DIR = path.join(ROOT_DIR, 'client');
 const CLIENT_DIST_DIR = path.join(CLIENT_DIR, 'dist');
 
@@ -19,6 +24,7 @@ module.exports = {
     BRANDING_DIR,
     LEGACY_DZI_DIR,
     LOG_DIR,
+    TILE_CACHE_DIR,
     CLIENT_DIR,
     CLIENT_DIST_DIR,
 };

@@ -195,12 +195,14 @@ Tile slide tidak dibuat di depan. `tile-service/app.py` (Python, OpenSlide) memb
 
 ```text
 Browser → Express /slides/<nama>.dzi, /slides/<nama>_files/<level>/<x>_<y>.jpg   (login, permission, link share)
-        → middleware/tileProxyMiddleware.js → tile service 127.0.0.1:3100 → OpenSlide → file di uploads/
+        → middleware/tileProxyMiddleware.js → tile sudah ada di storage/tile-cache/? kirim langsung dari disk
+                                              → belum? tile service 127.0.0.1:3100 → OpenSlide → file di uploads/
 ```
 
 - Tile service hanya mendengarkan di `127.0.0.1` dan tidak memeriksa login; semua akses lewat Express.
 - Slide lama yang dulu dikonversi oleh vips masih punya file `.dzi` di `public/slides/`. Slide tersebut tetap disajikan dari file statis itu.
-- Cache dibatasi `TILE_CACHE_MAX_GB`; tile yang paling lama tidak dibuka dihapus lebih dulu. Folder cache boleh dihapus kapan saja dan akan terisi lagi.
+- Tile yang sudah pernah dibuat dibaca Express langsung dari `storage/tile-cache/`, tanpa melewati Python (sekitar 2–3× lebih cepat). Tile service hanya dipanggil untuk tile yang belum pernah dilihat. Header `X-Tile-Cache` menunjukkan `hit` atau `miss`.
+- Cache dibatasi `TILE_CACHE_MAX_GB`; tile yang paling lama tidak dibuka dihapus lebih dulu (Express memperbarui waktu akses tile paling sering sekali per jam). Folder cache boleh dihapus kapan saja dan akan terisi lagi. Express dan tile service harus memakai `TILE_CACHE_DIR` yang sama; keduanya membaca `.env` yang sama.
 - Express memanggil tile service lewat `127.0.0.1`, bukan `localhost`, karena di Windows `localhost` menambah jeda sekitar 250 ms per request.
 
 ### Instalasi
